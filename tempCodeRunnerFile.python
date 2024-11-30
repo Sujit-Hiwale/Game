@@ -1,0 +1,14 @@
+for row in range(frames_per_col):
+        for col in range(frames_per_row):
+            frame = sprite_sheet.subsurface(pygame.Rect(col * frame_width, row * frame_height, frame_width, frame_height))
+            if row == 0:
+                frames['walk_left'].append(frame)
+            elif row == 1:
+                frames['stand'].append(frame)
+        frames['walk_right'] = [pygame.transform.flip(frame, True, False) for frame in frames['walk_left']]
+    
+    # Generate up-facing frames by rotating left-facing frames 90 degrees counter-clockwise
+    frames['walk_up'] = [pygame.transform.rotate(frame, 90) for frame in frames['walk_left']]
+    
+    # Generate down-facing frames by rotating left-facing frames 90 degrees clockwise
+    frames['walk_down'] = [pygame.transform.rotate(frame, -90) for frame in frames['walk_left']]

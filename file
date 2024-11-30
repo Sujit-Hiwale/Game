@@ -1,0 +1,107 @@
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+width, height = 800, 600
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Character Animation")
+
+# Load the sprite sheet
+sprite_sheet = pygame.image.load('./Characters/c.png').convert_alpha()
+
+# Define frame dimensions and rows/columns
+frame_width = 64  # width of one frame
+frame_height = 64 # height of one frame
+frames_per_row = 4
+frames_per_col = 4
+
+# Extract frames from the sprite sheet
+def extract_frames(sprite_sheet, frame_width, frame_height, frames_per_row, frames_per_col):
+    frames = {
+        'walk_right': [],
+        'walk_left': [],
+        'walk_up': [],
+        'walk_down' : [],
+        'stand': []
+    }
+    for row in range(frames_per_col):
+        for col in range(frames_per_row):
+            frame = sprite_sheet.subsurface(pygame.Rect(col * frame_width, row * frame_height, frame_width, frame_height))
+            if row == 0:
+                frames['walk_left'].append(frame)
+            elif row == 1:
+                frames['stand'].append(frame)
+        frames['walk_right'] = [pygame.transform.flip(frame, True, False) for frame in frames['walk_left']]
+    
+    # Generate up-facing frames by rotating left-facing frames 90 degrees counter-clockwise
+    frames['walk_up'] = [pygame.transform.rotate(frame, 90) for frame in frames['walk_left']]
+    
+    # Generate down-facing frames by rotating left-facing frames 90 degrees clockwise
+    frames['walk_down'] = [pygame.transform.rotate(frame, -90) for frame in frames['walk_left']]
+
+                
+    return frames
+
+# Extract frames
+frames = extract_frames(sprite_sheet, frame_width, frame_height, frames_per_row, frames_per_col)
+
+# Animation variables
+current_animation = 'stand'
+current_frame = 0
+animation_speed = 5
+animation_counter = 0
+
+# Initialize character position
+x, y = width // 2, height // 2
+velocity = 5
+
+# Main loop
+clock = pygame.time.Clock()
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        x -= velocity
+        current_animation = 'walk_left'
+        animation_counter += 1
+    elif keys[pygame.K_RIGHT]:
+        x += velocity
+        current_animation = 'walk_right'
+        animation_counter += 1
+    elif keys[pygame.K_UP]:
+        y -= velocity
+        current_animation = 'walk_up'
+        animation_counter += 1
+    elif keys[pygame.K_DOWN]:
+        y += velocity
+        current_animation = 'walk_down'
+        animation_counter += 1
+    else:
+        current_animation = 'stand'
+        animation_counter = 0
+        current_frame = 0
+
+    # Update the frame index for the animation
+    if animation_counter >= animation_speed:
+        current_frame = (current_frame + 1) % len(frames[current_animation])
+        animation_counter = 0
+
+    # Clear the screen
+    screen.fill((0, 0, 0))
+
+    # Draw the current frame
+    screen.blit(frames[current_animation][current_frame], (x, y))
+    
+    # Update the display
+    pygame.display.flip()
+
+    # Cap the frame rate
+    clock.tick(60)
